@@ -22,13 +22,11 @@ Vagrant.configure("2") do |config|
   #  mysql.vm.synced_folder ".", "/vagrant", disabled: true
   #end
   config.vm.define "phpweb" do |phpweb|
-    phpweb.ssh.connect_timeout = 500
-    phpweb.vm.boot_timeout = 500
     phpweb.vm.network "forwarded_port", guest: 8888, host: 8888
     phpweb.vm.network "public_network", ip: "192.168.100.31"
     phpweb.vm.provider "virtualbox" do |vb|
       vb.memory = 1024
-      vb.name = "ubuntu_bionic_php7"
+      vb.name = "ubuntu_php7"
     end
     phpweb.vm.provision "shell", inline: "apt-get update && apt-get install -y puppet"
     phpweb.vm.provision "puppet" do |puppet|
@@ -37,15 +35,17 @@ Vagrant.configure("2") do |config|
     end
   end
   config.vm.define "mysqlserver" do |mysqlserver|
-    mysqlserver.ssh.connect_timeout = 500
-    mysqlserver.vm.boot_timeout = 500
     mysqlserver.vm.network "public_network", ip: "192.168.100.32"
+    mysqlserver.vm.provider "virtualbox" do |vb|
+      vb.name = "ubuntu_mysql"
+    end
     mysqlserver.vm.provision "shell", inline: "cat /vagrant/configs/id_bionic.pub >> .ssh/authorized_keys"
   end
   config.vm.define "ansible" do |ansible|
-    ansible.ssh.connect_timeout = 500
-    ansible.vm.boot_timeout = 500
     ansible.vm.network "public_network", ip: "192.168.100.33"
+    ansible.vm.provider "virtualbox" do |vb|
+      vb.name = "ubuntu_ansible"
+    end
     ansible.vm.provision "shell", 
       inline: "cp /vagrant/id_bionic /home/vagrant && \
                chmod 600 /home/vagrant/id_bionic && \
@@ -55,7 +55,7 @@ Vagrant.configure("2") do |config|
                apt-get install -y software-properties-common && \
                apt-add-repository --yes --update ppa:ansible/ansible && \
                apt-get install -y ansible"
-    ansible.vm.provision "shell", inline: "ansible-playbook -i /vagrant/configs/ansible/hosts /vagrant/configs/ansible/playbook.yml"
+    #ansible.vm.provision "shell", inline: "ansible-playbook -i /vagrant/configs/ansible/hosts /vagrant/configs/ansible/playbook.yml"
   end
   config.vm.define "memcached" do |memcached|
     memcached.vm.box = "centos/7"
@@ -65,10 +65,10 @@ Vagrant.configure("2") do |config|
       vb.name = "centos7_memcached"
     end
   end
-  config.vm.define "dockerhost" do |dockerhost|
-    dockerhost.vm.provider "virtualbox" do |vb|
-      vb.name = "ubuntu_dockerhost"
+  config.vm.define "docker" do |docker|
+    docker.vm.provider "virtualbox" do |vb|
+      vb.name = "ubuntu_docker"
     end
-    dockerhost.vm.provision "shell", inline: "apt-get update && apt-get install -y docker.io"
+    docker.vm.provision "shell", inline: "apt-get update && apt-get install -y docker.io"
   end
 end
